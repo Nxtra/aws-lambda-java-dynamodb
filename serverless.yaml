@@ -23,16 +23,14 @@ provider:
         - "Fn::GetAtt": [ messageTable, Arn ]
 
 
-# you can add packaging information here
-package:
-  artifact: build/libs/aws-java-dynamodb-api-function-1.0-SNAPSHOT-all.jar
-
 functions:
   messageFunction:
     handler: com.nickvanhoof.ApiGatewayRequestHandler
     reservedConcurrency: 10
     provisionedConcurrency: 1
     timeout: 10
+    package:
+      artifact: build/libs/aws-java-dynamodb-api-function-1.0-SNAPSHOT-all.jar
     iamRoleStatements:
       - Effect: Allow
         Action:
