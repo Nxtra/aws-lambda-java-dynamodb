@@ -1,0 +1,60 @@
+service: aws-java-dynamodb-api-function
+
+provider:
+  name: aws
+  runtime: java11
+  stage: dev
+  region: eu-west-1
+  profile: nxtradev
+  tracing:
+    apiGateway: true
+    lambda: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "Fn::GetAtt": [ messageTable, Arn ]
+
+
+# you can add packaging information here
+package:
+  artifact: build/libs/aws-java-dynamodb-api-function-1.0-SNAPSHOT-all.jar
+
+functions:
+  messageFunction:
+    handler: com.nickvanhoof.ApiGatewayRequestHandler
+    reservedConcurrency: 10
+    provisionedConcurrency: 1
+    timeout: 10
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
+    events:
+      - http:
+          path: message
+          method: post
+resources: # CloudFormation template syntax from here on.
+  Resources:
+    messageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: messageTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
